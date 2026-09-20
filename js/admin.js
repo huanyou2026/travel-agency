@@ -1281,7 +1281,12 @@ const AdminHomepage = {
 
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
     set('hp-announcement', s.announcement);
-    set('hp-about', s.aboutText);
+    const ac = s.aboutContent || {};
+    set('hp-about', ac.aboutText);
+    set('hp-about-hero-url', ac.heroImage);
+    set('hp-about-hero-width', ac.heroImageWidth);
+    set('hp-about-story-url', ac.storyImage);
+    set('hp-about-story-width', ac.storyImageWidth);
   },
 
   addBannerRow(data = {}) {
@@ -1370,11 +1375,17 @@ const AdminHomepage = {
       featuredDestinations,
       featuredGuides,
       announcement: g('hp-announcement'),
-      heroImage: document.getElementById('hp-about-hero-url').value.trim(),
-      heroImageWidth: parseInt(document.getElementById('hp-about-hero-width').value) || 0,
-      storyImage: document.getElementById('hp-about-story-url').value.trim(),
-      storyImageWidth: parseInt(document.getElementById('hp-about-story-width').value) || 0,
-      aboutText: g('hp-about'),
+      aboutContent: Object.assign(
+        {},
+        ((Settings.get() || {}).aboutContent) || {},
+        {
+          heroImage: document.getElementById('hp-about-hero-url').value.trim(),
+          heroImageWidth: parseInt(document.getElementById('hp-about-hero-width').value) || 0,
+          storyImage: document.getElementById('hp-about-story-url').value.trim(),
+          storyImageWidth: parseInt(document.getElementById('hp-about-story-width').value) || 0,
+          aboutText: g('hp-about')
+        }
+      ),
       testimonials
     });
     DataLoader.clearCache();
