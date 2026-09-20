@@ -25,13 +25,22 @@ const TEMPLATES = {
   routes:      path.join(TEMPLATE_BASE, 'routes.html'),
   destinations:path.join(TEMPLATE_BASE, 'destinations.html'),
   guides:      path.join(TEMPLATE_BASE, 'guides.html'),
+  home:        path.join(TEMPLATE_BASE, 'index.html'),
 };
 
 // ─── 工具函数 ────────────────────────────────────────────────────────────────
 async function sfetch(url) {
-  const r = await fetch(url, { headers: SB_HEADERS });
-  if (!r.ok) return null;
-  try { return await r.json(); } catch { return null; }
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    const r = await fetch(url, { headers: SB_HEADERS, signal: ctrl.signal });
+    if (!r.ok) return null;
+    try { return await r.json(); } catch { return null; }
+  } catch {
+    return null; // 超时或网络错误 → 降级为静态/默认值
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function esc(s) {
@@ -94,6 +103,87 @@ function readTemplate(name) {
   const fp = TEMPLATES[name];
   if (!fp || !fs.existsSync(fp)) return null;
   return fs.readFileSync(fp, 'utf8');
+}
+
+// ─── 首页 SSR ────────────────────────────────────────────────────────────────
+// 平衡 div 深度匹配：返回与 openStart（'<' 位置）对应的 </div> 起始位置
+function findMatchingCloseDiv(s, openStart) {
+  let depth = 1;
+  let i = openStart + 4; // past '<div'
+  while (i < s.length) {
+    const nextLT = s.indexOf('<', i);
+    if (nextLT === -1) return -1;
+    if (s.startsWith('</div>', nextLT)) {
+      depth--;
+      if (depth === 0) return nextLT;
+      i = nextLT + 6;
+    } else if (s.startsWith('<div', nextLT) && /[\s>]/.test(s[nextLT + 4] || '')) {
+      depth++;
+      const gt = s.indexOf('>', nextLT);
+      if (gt === -1) return -1;
+      i = gt + 1;
+    } else {
+      const gt = s.indexOf('>', nextLT);
+      if (gt === -1) return -1;
+      i = gt + 1;
+    }
+  }
+  return -1;
+}
+
+// 渲染首页：用 settings.banner 替换 hero 默认轮播（消除首屏老图闪烁）
+function renderHome(tpl, settings) {
+  if (!tpl) return null;
+  let html = tpl;
+  const banner = settings && settings.banner ? settings.banner : null;
+  const images = banner && Array.isArray(banner.images)
+    ? banner.images.filter(i => i && typeof i === 'string') : [];
+
+  // SEO <title> 与 meta description
+  const seoTitle = (banner && banner.siteTitle) ? banner.siteTitle
+    : 'HuanYou Travel - Making Every Journey a Beautiful Memory';
+  const seoDesc = (banner && banner.siteDescription) ? banner.siteDescription
+    : 'Professional travel booking platform offering guided tours and self-guided travel services across China.';
+  html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc(seoTitle)}</title>`);
+  html = html.replace(/<meta name="description" content="[^"]*"/, `<meta name="description" content="${esc(seoDesc)}"`);
+
+  if (images.length === 0) return html; // 无 banner 数据，保持默认静态图
+
+  const titles    = Array.isArray(banner.titles)    ? banner.titles    : [];
+  const subtitles = Array.isArray(banner.subtitles) ? banner.subtitles : [];
+
+  // 1) 替换 hero-carousel 内部的 3 张默认 slide 为 settings.banner.images
+  const carouselStart = html.indexOf('<div class="hero-carousel" id="hero-carousel">');
+  if (carouselStart >= 0) {
+    const openTagEnd  = html.indexOf('>', carouselStart) + 1;
+    const carouselEnd = findMatchingCloseDiv(html, carouselStart);
+    if (carouselEnd > openTagEnd) {
+      const closeTagEnd = carouselEnd + '</div>'.length;
+      const slidesHtml  = images.map((img, i) =>
+        `      <div class="hero-slide${i === 0 ? ' active' : ''}">\n` +
+        `<img src="${esc(img)}" class="hero-slide-bg" alt="">\n` +
+        `        <div class="hero-overlay"></div>\n` +
+        `      </div>`
+      ).join('\n');
+      html = html.slice(0, openTagEnd) + '\n' + slidesHtml + '\n    ' + html.slice(carouselEnd);
+    }
+  }
+
+  // 2) 替换 hero-indicators
+  const indHtml = images.map((_, i) =>
+    `      <button class="hero-indicator${i === 0 ? ' active' : ''}" data-index="${i}"></button>`
+  ).join('\n');
+  html = html.replace(/(<div class="hero-indicators">\s*)[\s\S]*?(\s*<\/div>)/, '$1' + indHtml + '$2');
+
+  // 3) 替换 hero-title / hero-subtitle（取第一张图的标题/副标题）
+  if (titles[0]) {
+    html = html.replace(/(<h1 class="hero-title">)[^<]*(<\/h1>)/, '$1' + esc(titles[0]) + '$2');
+  }
+  if (subtitles[0]) {
+    html = html.replace(/(<p class="hero-subtitle">)[^<]*(<\/p>)/, '$1' + esc(subtitles[0]) + '$2');
+  }
+
+  return html;
 }
 
 // ─── 目的地 SSR ───────────────────────────────────────────────────────────────
@@ -350,6 +440,25 @@ function renderListPage(tpl, items, makeCardFn, pageTitle, seoDesc, containerId)
 exports.handler = async function (event, context) {
   const { path: rawPath, queryStringParameters: qp } = event;
   const urlPath = (rawPath || '/').replace(/\/$/, '');
+
+  // ── 首页 SSR ──────────────────────────────────────────────────────────────
+  if (urlPath === '' || urlPath === '/' || urlPath === '/index.html') {
+    const tpl = readTemplate('home');
+    if (!tpl) return { statusCode: 500, body: 'Template error' };
+    const rows = await sfetch(`${SB_URL}/rest/v1/settings?id=eq.site&select=data`);
+    const settings = rows && rows[0] ? rows[0].data : null;
+    const html = renderHome(tpl, settings);
+    if (!html) return { statusCode: 500, body: 'Render error' };
+    return {
+      statusCode: 200,
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'public, max-age=60, stale-while-revalidate=300',
+        'X-SSR': 'true',
+      },
+      body: html,
+    };
+  }
 
   // ── 列表页 SSR ────────────────────────────────────────────────────────────
   if (urlPath === '/routes' || urlPath === '/routes.html') {
