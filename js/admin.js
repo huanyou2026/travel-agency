@@ -161,6 +161,7 @@ const Admin = {
     if (pageName === 'destinations') AdminDestinations.render();
     if (pageName === 'guides') AdminGuides.render();
     if (pageName === 'homepage') AdminHomepage.load();
+    if (pageName === 'contact') AdminContact.load();
     if (pageName === 'settings') AdminSettings.load();
     if (pageName === 'users') AdminUsers.render();
     if (pageName === 'admins') AdminAdmins.render();
@@ -1290,6 +1291,7 @@ const AdminHomepage = {
     } else if (ac.storyImage) {
       AdminHomepage.addTeamImageRow({url: ac.storyImage, width: ac.storyImageWidth || 0});
     }
+    this.loadFooterData(s);
   },
 
   addBannerRow(data = {}) {
@@ -1389,7 +1391,7 @@ const AdminHomepage = {
       avatar: row.querySelector('.t-avatar').value.trim(),
       rating: parseInt(row.querySelector('.t-rating').value, 10) || 5,
       text: row.querySelector('.t-text').value.trim()
-    })).filter(t => t.name && t.text);
+    }));  const fData=this.collectFooterData();
 
     const g = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
     await Settings.save({
@@ -1410,10 +1412,155 @@ const AdminHomepage = {
           aboutText: g('hp-about')
         }
       ),
-      testimonials
+      testimonials,
+      footerQuickLinks: (fData||{}).footerQuickLinks || [],
+      footerDestLinks: (fData||{}).footerDestLinks || [],
+      footerSitemap: (fData||{}).footerSitemap || ''
     });
     DataLoader.clearCache();
     Toast.success('首页配置已保存，刷新前台页面即可生效！');
+  },
+  addFooterLinkRow(type, data) {
+    data = data || { label: '', href: '' };
+    var rowsId = type === 'quick' ? 'hp-footer-quick-rows' : 'hp-footer-dest-rows';
+    var rows = document.getElementById(rowsId);
+    if (!rows) return;
+    if (rows.querySelectorAll('.fl-row').length >= 8) { Toast && Toast.warning && Toast.warning('最多 8 条'); return; }
+    var div = document.createElement('div');
+    div.className = 'fl-row';
+    div.style.cssText = 'display:flex;gap:8px;align-items:center;margin-bottom:6px;';
+    div.innerHTML = `<input type="text" class="form-control fl-label" placeholder="链接文字" value="${(data.label||'').replace(/"/g,'&quot;')}" style="flex:1;">` +
+      `<input type="text" class="form-control fl-href" placeholder="/routes 或 https://..." value="${(data.href||'').replace(/"/g,'&quot;')}" style="flex:2;">` +
+      `<button type="button" class="btn-icon" onclick="this.closest('.fl-row').remove()" title="删除"><i class="fas fa-trash"></i></button>`;
+    rows.appendChild(div);
+  },
+
+  loadFooterData(s) {
+    var ql = s.footerQuickLinks || [
+      { label: 'Tours', href: '/routes' },
+      { label: 'Top Destinations', href: '/destinations' },
+      { label: 'Travel Guides', href: '/guides' },
+      { label: 'About Us', href: 'about.html' }
+    ];
+    var dl = s.footerDestLinks || [
+      { label: 'Yunnan', href: '/destinations' },
+      { label: 'Sichuan', href: '/destinations' },
+      { label: 'Tibet', href: '/destinations' },
+      { label: 'Guangxi', href: '/destinations' }
+    ];
+    var qr = document.getElementById('hp-footer-quick-rows');
+    var dr = document.getElementById('hp-footer-dest-rows');
+    if (qr) qr.innerHTML = '';
+    if (dr) dr.innerHTML = '';
+    var _self = this;
+    ql.forEach(function(item) { _self.addFooterLinkRow('quick', item); });
+    dl.forEach(function(item) { _self.addFooterLinkRow('dest', item); });
+    var sm = document.getElementById('hp-footer-sitemap');
+    if (sm) sm.value = s.footerSitemap || '';
+  },
+
+  collectFooterData() {
+    var ql = Array.from(document.querySelectorAll('#hp-footer-quick-rows .fl-row'))
+      .map(function(row) { return { label: row.querySelector('.fl-label').value.trim(), href: row.querySelector('.fl-href').value.trim() }})
+      .filter(function(r) { return r.label && r.href; });
+    var dl = Array.from(document.querySelectorAll('#hp-footer-dest-rows .fl-row'))
+      .map(function(row) { return { label: row.querySelector('.fl-label').value.trim(), href: row.querySelector('.fl-href').value.trim() } })
+      .filter(function(r) { return r.label && r.href; });
+    var sitemap = (document.getElementById('hp-footer-sitemap') || { value: '' }).value.trim();
+    return { footerQuickLinks: ql, footerDestLinks: dl, footerSitemap: sitemap };
+  },
+};
+
+// ===== 联系我们页面配置（含联系卡片与 FAQ） =====
+const AdminContact = {
+  cardLimit: 6,
+  faqLimit: 20,
+
+  async load() {
+    const s = await DataLoader.loadSettings() || {};
+    const cc = s.contactContent || {};
+    document.getElementById('ct-subtitle').value = cc.subtitle || '';
+    // 卡片
+    const cardEl = document.getElementById('ct-card-rows');
+    if (cardEl) {
+      cardEl.innerHTML = '';
+      const list = cc.cards || [];
+      list.forEach(it => this.addCard(it));
+      if (!list.length) this.addCard({});
+    }
+    // FAQ
+    const faqEl = document.getElementById('ct-faq-rows');
+    if (faqEl) {
+      faqEl.innerHTML = '';
+      const list = cc.faqs || [];
+      list.forEach(it => this.addFaq(it));
+      if (!list.length) this.addFaq({});
+    }
+  },
+
+  addCard(data) {
+    const rows = document.getElementById('ct-card-rows');
+    if (!rows) return;
+    if (rows.querySelectorAll('.ct-card-row').length >= this.cardLimit) { Toast.warning('最多 ' + this.cardLimit + ' 张卡片'); return; }
+    const d = data || {};
+    const div = document.createElement('div');
+    div.className = 'mini-row ct-card-row';
+    div.style.cssText = 'display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;';
+    div.innerHTML =
+      '<input type="text" class="form-control ct-card-icon" placeholder="图标 fa-phone-alt" value="' + (d.icon || 'fa-phone-alt').replace(/"/g, '&quot;') + '" style="width:160px;">' +
+      '<input type="text" class="form-control ct-card-title" placeholder="标题" value="' + (d.title || '').replace(/"/g, '&quot;') + '" style="width:140px;">' +
+      '<input type="text" class="form-control ct-card-value" placeholder="主内容" value="' + (d.value || '').replace(/"/g, '&quot;') + '" style="flex:2;min-width:160px;">' +
+      '<input type="text" class="form-control ct-card-sub" placeholder="辅助说明" value="' + (d.sub || '').replace(/"/g, '&quot;') + '" style="flex:1;min-width:140px;">' +
+      '<button type="button" class="btn-icon" onclick="this.closest(\'\.ct-card-row\').remove()" title="删除"><i class="fas fa-trash"></i></button>';
+    rows.appendChild(div);
+  },
+
+  addFaq(data) {
+    const rows = document.getElementById('ct-faq-rows');
+    if (!rows) return;
+    if (rows.querySelectorAll('.ct-faq-row').length >= this.faqLimit) { Toast.warning('最多 ' + this.faqLimit + ' 条 FAQ'); return; }
+    const d = data || {};
+    const div = document.createElement('div');
+    div.className = 'ct-faq-row';
+    div.style.cssText = 'display:flex;gap:8px;align-items:flex-start;margin-bottom:10px;padding:10px;background:#fafbfc;border-radius:8px;';
+    div.innerHTML =
+      '<div style="flex:1;display:flex;flex-direction:column;gap:6px;">' +
+        '<input type="text" class="form-control ct-faq-q" placeholder="问题" value="' + (d.q || '').replace(/"/g, '&quot;') + '">' +
+        '<textarea class="form-control ct-faq-a" rows="2" placeholder="答案（支持多行）">' + (d.a || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</textarea>' +
+      '</div>' +
+      '<button type="button" class="btn-icon" onclick="this.closest(\'\.ct-faq-row\').remove()" title="删除" style="margin-top:4px;"><i class="fas fa-trash"></i></button>';
+    rows.appendChild(div);
+  },
+
+  async save() {
+    const subtitle = document.getElementById('ct-subtitle').value.trim();
+    const cards = Array.from(document.querySelectorAll('.ct-card-row')).map(function(row) {
+      return {
+        icon: row.querySelector('.ct-card-icon').value.trim() || 'fa-phone-alt',
+        title: row.querySelector('.ct-card-title').value.trim(),
+        value: row.querySelector('.ct-card-value').value.trim(),
+        sub: row.querySelector('.ct-card-sub').value.trim()
+      };
+    }).filter(function(c) { return c.title || c.value; });
+    const faqs = Array.from(document.querySelectorAll('.ct-faq-row')).map(function(row) {
+      return {
+        q: row.querySelector('.ct-faq-q').value.trim(),
+        a: row.querySelector('.ct-faq-a').value
+      };
+    }).filter(function(f) { return f.q && f.a; });
+
+    const contactContent = { subtitle: subtitle, cards: cards, faqs: faqs };
+    // merge with existing to keep other fields
+    const cur = (await DataLoader.loadSettings()) || {};
+    const merged = Object.assign({}, cur, { contactContent: Object.assign({}, cur.contactContent || {}, contactContent) });
+
+    if (Store.isCloud()) {
+      await Cloud.upsert('settings', merged);
+    } else {
+      Store.set('tw_settings', merged);
+    }
+    DataLoader.clearCache();
+    Toast.success('联系我们页面已保存！');
   }
 };
 

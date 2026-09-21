@@ -476,21 +476,11 @@ copyright: s.copyright || '© 2026 HuanYou Travel. All rights reserved.',
           </div>
           <div>
 <h4 class="footer-title">Quick Links</h4>
-            <div class="footer-links">
-<a href="/routes">Tours</a>
-<a href="/destinations">Top Destinations</a>
-<a href="/guides">Travel Guides</a>
-<a href="about.html">About Us</a>
-            </div>
+            <div class="footer-links">${(Array.isArray(s.footerQuickLinks)&&s.footerQuickLinks.length>0?s.footerQuickLinks:[{label:'Tours',href:'/routes'},{label:'Top Destinations',href:'/destinations'},{label:'Travel Guides',href:'/guides'},{label:'About Us',href:'about.html'}]).map(r=>'<a href="'+esc(r.href||'#')+'">'+esc(r.label||'')+'</a>').join('')}</div>
           </div>
           <div>
-<h4 class="footer-title">Destinations</h4>
-            <div class="footer-links">
-<a href="/destinations">Yunnan</a>
-<a href="/destinations">Sichuan</a>
-<a href="/destinations">Tibet</a>
-<a href="/destinations">Guangxi</a>
-            </div>
+            <h4 class="footer-title">Destinations</h4>
+            <div class="footer-links">${(Array.isArray(s.footerDestLinks)&&s.footerDestLinks.length>0?s.footerDestLinks:[{label:'Yunnan',href:'/destinations'},{label:'Sichuan',href:'/destinations'},{label:'Tibet',href:'/destinations'},{label:'Guangxi',href:'/destinations'}]).map(r=>'<a href="'+esc(r.href||'#')+'">'+esc(r.label||'')+'</a>').join('')}
           </div>
           <div>
 <h4 class="footer-title">Contact Us</h4>
@@ -513,7 +503,7 @@ copyright: s.copyright || '© 2026 HuanYou Travel. All rights reserved.',
           <div class="footer-bottom-links">
 <a href="#">Privacy Policy</a>
 <a href="#">Terms of Service</a>
-<a href="#">Sitemap</a>
+<a href="${esc(s.footerSitemap || '#')}">Sitemap</a>
             ${settings.icpNumber ? `<a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">${settings.icpNumber}</a>` : ''}
           </div>
         </div>
