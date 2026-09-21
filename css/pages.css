@@ -1147,6 +1147,24 @@
   box-shadow: 0 8px 32px rgba(0,0,0,0.1);
 }
 
+/* About Us Team Images (multi-image vertical stack) */
+.about-team-images {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.about-team-images img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  display: block;
+}
+#about-intro-text p {
+  margin-bottom: 1em;
+  line-height: 1.7;
+}
+#about-intro-text p:last-child { margin-bottom: 0; }
+
 /* ===== Contact Page ===== */
 .contact-page { background: #fff; }
 .contact-info-section { padding: 60px 0 40px; background: #f8faf9; }

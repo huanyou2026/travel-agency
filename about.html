@@ -56,7 +56,7 @@
           </div>
           <div class="about-intro-text">
 <h2>15 Years of Journeys — Sharing the Most Beautiful Scenery Together</h2>
-            <p id="about-intro-text" class="about-content-placeholder"></p>
+            <div id="about-intro-text" class="about-content-placeholder"></div>
             <div class="about-features">
               <div class="about-feature">
                 <i class="fas fa-shield-alt"></i>
@@ -148,13 +148,13 @@
       <div class="container">
         <div class="about-story-grid">
           <div class="about-story-text">
-<h2>Our Story</h2>
+<h2>Our Team</h2>
 <p>HuanYou Travel began with a simple trip. In 2011, our founding team was traveling in Yunnan when they realized that many visitors struggled with overwhelming travel information and found it hard to access truly quality travel experiences. That was the moment we envisioned a platform dedicated to quality travel.</p>
 <p>Starting with just a few classic routes, we have grown to offer hundreds of boutique tours across China and beyond. Along the way, we have stayed true to our belief: "Quality First, Service Foremost." Over 15 years, we have served more than 2 million travelers and earned countless five-star reviews.</p>
 <p>Looking ahead, HuanYou Travel will continue to innovate in the travel space — bringing more services so every traveler can enjoy a convenient, safe, and delightful journey.</p>
           </div>
           <div class="about-story-image">
-<img id="about-story-img" src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=600&q=80" alt="Our Story" style="max-width:100%;">
+<div id="about-team-images" class="about-team-images"></div>
           </div>
         </div>
       </div>
@@ -234,8 +234,22 @@
         // About Us images
         var heroImg = document.getElementById('about-hero-img');
         if (heroImg && ac.heroImage) { heroImg.src = ac.heroImage; if (ac.heroImageWidth > 0) heroImg.style.maxWidth = ac.heroImageWidth + 'px'; }
-        var storyImg = document.getElementById('about-story-img');
-        if (storyImg && ac.storyImage) { storyImg.src = ac.storyImage; if (ac.storyImageWidth > 0) storyImg.style.maxWidth = ac.storyImageWidth + 'px'; }
+        var teamImagesEl = document.getElementById('about-team-images');
+        var teamSrcs = (ac.teamImages && ac.teamImages.length > 0) ? ac.teamImages : [];
+        if (teamSrcs.length === 0 && ac.storyImage) { teamSrcs = [{url: ac.storyImage, width: ac.storyImageWidth || 0}]; }
+        if (teamImagesEl) {
+          teamImagesEl.innerHTML = '';
+          teamSrcs.forEach(function(item) {
+            if (!item.url) return;
+            var img = document.createElement('img');
+            img.src = item.url; img.alt = 'Team Photo'; img.style.display = 'block';
+            img.style.width = '100%'; img.style.marginBottom = '16px'; img.style.borderRadius = '8px'; img.style.opacity = '0';
+            if (item.width) img.style.maxWidth = item.width + 'px';
+            img.onload = function() { this.style.opacity = '1'; };
+            img.onerror = function() { this.style.display = 'none'; };
+            teamImagesEl.appendChild(img);
+          });
+        }
         var sub = document.querySelector('.page-header .page-subtitle');
         if (sub && ac.subtitle) {
           sub.textContent = ac.subtitle;
@@ -243,7 +257,12 @@
         }
         var introEl = document.getElementById('about-intro-text');
         if (introEl && ac.intro) {
-          introEl.textContent = ac.intro;
+          if (ac.intro) {
+          var paras = ac.intro.split(/\n{2,}/).filter(Boolean);
+          introEl.innerHTML = paras.map(function(p) {
+            return '<p>' + p.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>') + '</p>';
+          }).join('');
+        } else { introEl.innerHTML = ''; }
           introEl.classList.remove('about-content-placeholder');
         }
         if (Array.isArray(ac.features) && ac.features.length) {

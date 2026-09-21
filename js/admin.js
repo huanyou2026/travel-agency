@@ -1285,8 +1285,11 @@ const AdminHomepage = {
     set('hp-about', ac.aboutText);
     set('hp-about-hero-url', ac.heroImage);
     set('hp-about-hero-width', ac.heroImageWidth);
-    set('hp-about-story-url', ac.storyImage);
-    set('hp-about-story-width', ac.storyImageWidth);
+    if (ac.teamImages && ac.teamImages.length > 0) {
+      ac.teamImages.forEach(function(item) { AdminHomepage.addTeamImageRow(item); });
+    } else if (ac.storyImage) {
+      AdminHomepage.addTeamImageRow({url: ac.storyImage, width: ac.storyImageWidth || 0});
+    }
   },
 
   addBannerRow(data = {}) {
@@ -1344,6 +1347,26 @@ const AdminHomepage = {
     return div;
   },
 
+  addTeamImageRow(item) {
+    item = item || {};
+    var rows = document.getElementById('hp-about-team-rows');
+    if (!rows) return;
+    if (document.querySelectorAll('.ti-row').length >= 8) { Toast && Toast.warning && Toast.warning('最多 8 张图片'); return; }
+    var row = document.createElement('div');
+    row.className = 'ti-row';
+    row.innerHTML = '<img class="ti-img-pv" src="" style="display:none;width:80px;height:60px;object-fit:cover;border-radius:6px;flex-shrink:0;">' +
+      '<input type="text" class="ti-img-url form-control" placeholder="图片URL" value="">' +
+      '<button type="button" class="btn-icon" title="上传" onclick="var inp=this.previousElementSibling;AdminImageUpload.pickUrl(inp)"><i class="fas fa-upload"></i></button>' +
+      '<input type="number" class="ti-img-w form-control" placeholder="宽度px" min="200" max="3840" value="" style="width:90px;">' +
+      '<button type="button" class="btn-icon" title="删除" onclick="this.closest(\'.ti-row\').remove();"><i class="fas fa-trash"></i></button>';
+    rows.appendChild(row);
+    var urlIn = row.querySelector('.ti-img-url');
+    var pvImg = row.querySelector('.ti-img-pv');
+    var wIn = row.querySelector('.ti-img-w');
+    if (item.url) { urlIn.value = item.url; pvImg.src = item.url; pvImg.style.display = 'block'; if (item.width) wIn.value = item.width; }
+    urlIn.oninput = function() { var url = urlIn.value.trim(); pvImg.src = url; pvImg.style.display = url ? 'block' : 'none'; };
+  },
+
   async save() {
     const banner = { images: [], titles: [], subtitles: [] };
     document.querySelectorAll('#hp-banner-rows .hp-row').forEach(row => {
@@ -1381,8 +1404,9 @@ const AdminHomepage = {
         {
           heroImage: document.getElementById('hp-about-hero-url').value.trim(),
           heroImageWidth: parseInt(document.getElementById('hp-about-hero-width').value) || 0,
-          storyImage: document.getElementById('hp-about-story-url').value.trim(),
-          storyImageWidth: parseInt(document.getElementById('hp-about-story-width').value) || 0,
+          teamImages: Array.from(document.querySelectorAll('.ti-row')).map(function(row) {
+            return { url: row.querySelector('.ti-img-url').value.trim(), width: parseInt(row.querySelector('.ti-img-w').value) || 0 };
+          }).filter(function(item) { return item.url; }),
           aboutText: g('hp-about')
         }
       ),

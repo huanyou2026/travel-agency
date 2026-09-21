@@ -629,7 +629,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   flex-direction: column;
   gap: 8px;
 }
-.mini-row, .hp-row, .ab-row, .ct-row, .hd-nav-row {
+.mini-row, .hp-row, .ab-row, .ct-row, .hd-nav-row, .ti-row {
   border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 10px 12px;
