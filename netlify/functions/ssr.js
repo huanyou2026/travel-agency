@@ -437,6 +437,46 @@ function renderListPage(tpl, items, makeCardFn, pageTitle, seoDesc, containerId)
 }
 
 // ─── 主入口 ──────────────────────────────────────────────────────────────────
+function generateSitemap(routes, destinations, guides) {
+  const BASE = 'https://tuyou001.com';
+  const now = new Date().toISOString().split('T')[0];
+  const urls = [];
+
+  const staticPages = [
+    { path: '/', priority: '1.0', changefreq: 'daily' },
+    { path: '/about.html', priority: '0.8', changefreq: 'monthly' },
+    { path: '/routes.html', priority: '0.9', changefreq: 'weekly' },
+    { path: '/destinations.html', priority: '0.9', changefreq: 'weekly' },
+    { path: '/guides.html', priority: '0.8', changefreq: 'weekly' },
+    { path: '/contact.html', priority: '0.6', changefreq: 'monthly' },
+    { path: '/booking.html', priority: '0.7', changefreq: 'monthly' }
+  ];
+  staticPages.forEach(function(p) {
+    urls.push('  <url>\n    <loc>' + BASE + p.path + '</loc>\n    <lastmod>' + now + '</lastmod>\n    <changefreq>' + p.changefreq + '</changefreq>\n    <priority>' + p.priority + '</priority>\n  </url>');
+  });
+
+  if (Array.isArray(routes)) {
+    routes.forEach(function(r) {
+      var slug = r.slug || r.id;
+      urls.push('  <url>\n    <loc>' + BASE + '/route/' + slug + '</loc>\n    <lastmod>' + (r.createdAt ? String(r.createdAt).split('T')[0] : now) + '</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>');
+    });
+  }
+  if (Array.isArray(destinations)) {
+    destinations.forEach(function(d) {
+      var slug = d.slug || d.id;
+      urls.push('  <url>\n    <loc>' + BASE + '/destination/' + slug + '</loc>\n    <lastmod>' + (d.createdAt ? String(d.createdAt).split('T')[0] : now) + '</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>');
+    });
+  }
+  if (Array.isArray(guides)) {
+    guides.forEach(function(g) {
+      var slug = g.slug || g.id;
+      urls.push('  <url>\n    <loc>' + BASE + '/guide/' + slug + '</loc>\n    <lastmod>' + (g.createdAt ? String(g.createdAt).split('T')[0] : now) + '</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>');
+    });
+  }
+
+  return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + urls.join('\n') + '\n</urlset>';
+}
+
 exports.handler = async function (event, context) {
   const { path: rawPath, queryStringParameters: qp } = event;
   const urlPath = (rawPath || '/').replace(/\/$/, '');
