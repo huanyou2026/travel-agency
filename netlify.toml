@@ -85,6 +85,19 @@
   status   = 200
   force    = true
 
+# SEO: sitemap & robots
+[[redirects]]
+  from     = "/sitemap.xml"
+  to       = "/.netlify/functions/ssr"
+  status   = 200
+  force    = true
+
+[[redirects]]
+  from     = "/robots.txt"
+  to       = "/.netlify/functions/ssr"
+  status   = 200
+  force    = true
+
 # SPA fallback
 [[redirects]]
   from     = "/*"

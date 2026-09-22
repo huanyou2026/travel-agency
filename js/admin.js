@@ -825,6 +825,11 @@ const AdminRoutes = {
           </div>
         </div>
         <div class="form-group"><label class="admin-form-label">标签（逗号分隔）</label><input type="text" class="admin-form-control" id="r-tags" value="${esc(route.tags ? route.tags.join(',') : '')}" placeholder="热门,纯玩团,深度游"></div>
+        <div class="form-group full" style="background:#f0f7ff;padding:12px;border-radius:8px;margin-top:8px;">
+          <label class="admin-form-label" style="color:#1565c0;font-weight:700;">SEO Settings</label>
+          <div class="form-group"><label class="admin-form-label">SEO Title</label><input type="text" class="admin-form-control" id="r-seoTitle" value="${esc(route.seoTitle || '')}" placeholder="Leave blank = auto"></div>
+          <div class="form-group"><label class="admin-form-label">SEO Description</label><input type="text" class="admin-form-control" id="r-seoDescription" value="${esc(route.seoDescription || '')}" placeholder="80-160 chars"></div>
+        </div>
         <div class="form-group"><label class="admin-form-label">封面图片宽度（px）</label>
           <div style="display:flex;gap:8px;align-items:center;">
             <input type="number" class="admin-form-control" id="r-heroWidth" value="${route.heroWidth || ''}" min="200" max="3840" placeholder="留空则全宽自适应" style="width:120px;">
@@ -923,6 +928,8 @@ const AdminRoutes = {
       featured: document.getElementById('r-featured').value === 'true',
       views: old ? (old.views || 0) : 0,
       heroWidth: parseInt(document.getElementById('r-heroWidth').value) || 0,
+      seoTitle: document.getElementById('r-seoTitle') ? document.getElementById('r-seoTitle').value.trim() : '',
+      seoDescription: document.getElementById('r-seoDescription') ? document.getElementById('r-seoDescription').value.trim() : '',
       coverWidth,
       banner: cover,
       createdAt: old ? (old.createdAt || new Date().toISOString()) : new Date().toISOString()
@@ -1030,6 +1037,11 @@ const AdminDestinations = {
           </div>
         </div>
         <div class="form-group full"><label class="admin-form-label">标签（逗号分隔）</label><input type="text" class="admin-form-control" id="d-tags" value="${esc(dest.tags ? dest.tags.join(',') : '')}" placeholder="古城,雪山,慢生活"></div>
+        <div class="form-group full" style="background:#f0f7ff;padding:12px;border-radius:8px;margin-top:8px;">
+          <label class="admin-form-label" style="color:#1565c0;font-weight:700;">SEO Settings</label>
+          <div class="form-group"><label class="admin-form-label">SEO Title</label><input type="text" class="admin-form-control" id="d-seoTitle" value="${esc(dest.seoTitle || '')}" placeholder="Leave blank = auto"></div>
+          <div class="form-group"><label class="admin-form-label">SEO Description</label><input type="text" class="admin-form-control" id="d-seoDescription" value="${esc(dest.seoDescription || '')}" placeholder="80-160 chars"></div>
+        </div>
         <div class="form-group full"><label class="admin-form-label">简介</label><textarea class="admin-form-control" id="d-summary" rows="2">${esc(dest.summary)}</textarea></div>
         <div class="form-group full"><label class="admin-form-label">详细介绍（段落间空行分隔）</label><textarea class="admin-form-control" id="d-content" rows="6">${esc(dest.content)}</textarea></div>
         <div class="form-group full">
@@ -1104,7 +1116,9 @@ const AdminDestinations = {
       status: document.getElementById('d-status').value,
       featured: old ? !!old.featured : false,
       views: old ? (old.views || 0) : 0,
-      createdAt: old ? (old.createdAt || new Date().toISOString()) : new Date().toISOString()
+      createdAt: old ? (old.createdAt || new Date().toISOString()) : new Date().toISOString(),
+      seoTitle: document.getElementById('d-seoTitle') ? document.getElementById('d-seoTitle').value.trim() : '',
+      seoDescription: document.getElementById('d-seoDescription') ? document.getElementById('d-seoDescription').value.trim() : ''
     };
     const idx = this.data.findIndex(d => d.id === dest.id);
     if (idx !== -1) this.data[idx] = dest;
@@ -1183,6 +1197,12 @@ const AdminGuides = {
             <span style="font-size:12px;color:#888;">px</span>
           </div>
         </div></div></div></div>
+        
+        <div class="form-group full" style="background:#f0f7ff;padding:12px;border-radius:8px;margin-top:8px;">
+          <label class="admin-form-label" style="color:#1565c0;font-weight:700;">SEO Settings</label>
+          <div class="form-group"><label class="admin-form-label">SEO Title</label><input type="text" class="admin-form-control" id="g-seoTitle" value="${esc(guide.seoTitle || '')}" placeholder="Leave blank = auto"></div>
+          <div class="form-group"><label class="admin-form-label">SEO Description</label><input type="text" class="admin-form-control" id="g-seoDescription" value="${esc(guide.seoDescription || '')}" placeholder="80-160 chars"></div>
+        </div>
         <div class="form-group full"><label class="admin-form-label">摘要</label><textarea class="admin-form-control" id="g-summary" rows="2">${esc(guide.summary)}</textarea></div>
         <div class="form-group full"><label class="admin-form-label">正文内容（## 标题，段落空行分隔）</label><textarea class="admin-form-control" id="g-content" rows="10" placeholder="## 标题&#10;&#10;正文内容...">${esc(guide.content)}</textarea></div>
         <div class="form-group"><label class="admin-form-label">发布日期</label><input type="date" class="admin-form-control" id="g-publishTime" value="${esc(guide.publishTime)}"></div>
@@ -1213,7 +1233,9 @@ const AdminGuides = {
       featured: old ? !!old.featured : false,
       views: old ? (old.views || 0) : 0,
       likes: old ? (old.likes || 0) : 0,
-      createdAt: old ? (old.createdAt || new Date().toISOString()) : new Date().toISOString()
+      createdAt: old ? (old.createdAt || new Date().toISOString()) : new Date().toISOString(),
+      seoTitle: document.getElementById('g-seoTitle') ? document.getElementById('g-seoTitle').value.trim() : '',
+      seoDescription: document.getElementById('g-seoDescription') ? document.getElementById('g-seoDescription').value.trim() : ''
     };
     const idx = this.data.findIndex(g => g.id === guide.id);
     if (idx !== -1) this.data[idx] = guide;
@@ -1599,6 +1621,8 @@ const AdminSettings = {
     set('set-qq', c.qq);
     set('set-copyright', s.copyright);
     set('set-icp', s.icpNumber);
+    if (document.getElementById('set-seo-title')) document.getElementById('set-seo-title').value = s.seoTitle || '';
+    if (document.getElementById('set-seo-description')) document.getElementById('set-seo-description').value = s.seoDescription || '';
     // 关于我们 / 联系我们内容
     const ac = s.aboutContent || {};
     set('set-about-intro', ac.intro);
@@ -1636,6 +1660,8 @@ const AdminSettings = {
       },
       copyright: v('set-copyright'),
       icpNumber: v('set-icp'),
+      seoTitle: v('set-seo-title'),
+      seoDescription: v('set-seo-description'),
     });
     DataLoader.clearCache();
     Toast.success('系统设置已保存，刷新前台页面即可生效！');

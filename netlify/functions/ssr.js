@@ -192,8 +192,8 @@ function renderDest(tpl, dest) {
   const tags  = Array.isArray(dest.tags) ? dest.tags : [];
   const highs = Array.isArray(dest.highlights) ? dest.highlights : [];
 
-  const seoTitle = `${esc(dest.name)}${tags.length ? ' | ' + tags.slice(0, 2).join(' & ') : ''} - HuanYou Travel`;
-  const seoDesc  = makeDesc(dest.summary || dest.content, tags.length ? ` Highlights: ${tags.join(', ')}.` : '');
+  const seoTitle = dest.seoTitle ? esc(dest.seoTitle) : `${esc(dest.name)}${tags.length ? ' | ' + tags.slice(0, 2).join(' & ') : ''} - HuanYou Travel`;
+  const seoDesc  = dest.seoDescription ? esc(dest.seoDescription) : makeDesc(dest.summary || dest.content, tags.length ? ` Highlights: ${tags.join(', ')}.` : '');
 
   let html = tpl;
   html = html.replace(/<title[^>]*>[^<]*<\/title>/, `<title>${seoTitle}</title>`);
@@ -230,8 +230,8 @@ function renderGuide(tpl, guide) {
   if (guide.category) subParts.push(guide.category);
   if (tags.length) subParts.push(tags[0]);
   const subTitle = subParts.length ? ' | ' + subParts.slice(0, 2).join(' · ') : '';
-  const seoTitle = `${esc(guide.title || 'Guide')}${subTitle} - HuanYou Travel`;
-  const seoDesc  = makeDesc(guide.summary, tags.length ? ` Tags: ${tags.join(', ')}.` : guide.category ? ` Category: ${guide.category}.` : '');
+  const seoTitle = guide.seoTitle ? esc(guide.seoTitle) : `${esc(guide.title || 'Guide')}${subTitle} - HuanYou Travel`;
+  const seoDesc  = guide.seoDescription ? esc(guide.seoDescription) : makeDesc(guide.summary, tags.length ? ` Tags: ${tags.join(', ')}.` : guide.category ? ` Category: ${guide.category}.` : '');
 
   let html = tpl;
   html = html.replace(/<title[^>]*>[^<]*<\/title>/, `<title>${seoTitle}</title>`);
@@ -261,8 +261,8 @@ function renderRoute(tpl, route) {
   if (route.days) subParts.push(`${route.days} Days`);
   if (tags.length) subParts.push(tags[0]);
   const subTitle = subParts.length ? ' | ' + subParts.join(' · ') : '';
-  const seoTitle = `${esc(route.title || 'Tour')}${subTitle} - HuanYou Travel`;
-  const seoDesc  = makeDesc(route.description || route.summary || route.content || '',
+  const seoTitle = route.seoTitle ? esc(route.seoTitle) : `${esc(route.title || 'Tour')}${subTitle} - HuanYou Travel`;
+  const seoDesc  = route.seoDescription ? esc(route.seoDescription) : makeDesc(route.description || route.summary || route.content || '',
     tags.length ? ` Highlights: ${tags.join(', ')}.` : '');
 
   let html = tpl;
@@ -440,6 +440,31 @@ function renderListPage(tpl, items, makeCardFn, pageTitle, seoDesc, containerId)
 exports.handler = async function (event, context) {
   const { path: rawPath, queryStringParameters: qp } = event;
   const urlPath = (rawPath || '/').replace(/\/$/, '');
+
+  // --- Sitemap ---
+  if (urlPath === '/sitemap.xml') {
+    try {
+      const [rRows, dRows, gRows] = await Promise.all([
+        sfetch(SB_URL + '/rest/v1/routes?select=id,data'),
+        sfetch(SB_URL + '/rest/v1/destinations?select=id,data'),
+        sfetch(SB_URL + '/rest/v1/guides?select=id,data')
+      ]);
+      const routes = (rRows || []).map(r => r.data).filter(d => d && d.status === 'published');
+      const destinations = (dRows || []).map(d => d.data).filter(d => d && d.status !== 'draft');
+      const guides = (gRows || []).map(g => g.data).filter(d => d && d.status === 'published');
+      const xml = generateSitemap(routes, destinations, guides);
+      return { statusCode: 200, headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }, body: xml };
+    } catch (e) { return { statusCode: 500, body: 'Sitemap error' }; }
+  }
+
+  // --- robots.txt ---
+  if (urlPath === '/robots.txt') {
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'text/plain' },
+      body: 'User-agent: *\nAllow: /\n\nSitemap: https://tuyou001.com/sitemap.xml\n'
+    };
+  }
 
   // ── 首页 SSR ──────────────────────────────────────────────────────────────
   if (urlPath === '' || urlPath === '/' || urlPath === '/index.html') {
