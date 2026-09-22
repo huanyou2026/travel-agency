@@ -390,9 +390,12 @@ if (tEl && /Time|Hours|Business/.test(tEl.textContent)) {
           });
         }
       }
-    }
-    if (window.DataLoader) {
-            // FAQ 渲染
+      // 恢复所有未被自定义内容覆盖的 placeholder（默认卡片值/副标题）可见
+      var _phEls = document.querySelectorAll('.contact-info-placeholder');
+      for (var _pi = 0; _pi < _phEls.length; _pi++) {
+        _phEls[_pi].classList.remove('contact-info-placeholder');
+      }
+      // FAQ 渲染
       var faqListEl = document.getElementById('contact-faq-list');
       if (faqListEl && Array.isArray(cc.faqs) && cc.faqs.length) {
         faqListEl.innerHTML = '';
@@ -415,7 +418,6 @@ if (tEl && /Time|Hours|Business/.test(tEl.textContent)) {
       }
     }
     DataLoader.loadSettings().then(applyContact).catch(function(){});
-    }
     if (window.ContactForm) ContactForm.init('contact-form', 'contact-success');
   </script>
 </body>
