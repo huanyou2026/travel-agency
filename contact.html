@@ -349,11 +349,17 @@ if (tEl && /Time|Hours|Business/.test(tEl.textContent)) {
           }
         }
       }
-      if (Array.isArray(cc.cards) && cc.cards.length) {
+      var __cardsList = (Array.isArray(cc.cards) && cc.cards.length) ? cc.cards : (s.contact && (s.contact.phone || s.contact.email || s.contact.address) ? [
+          { icon: 'fa-map-marker-alt', title: 'Address', value: s.contact.address || '', sub: 'Headquarters' },
+          { icon: 'fa-phone-alt', title: 'Phone', value: s.contact.phone || '', sub: 'Call us anytime' },
+          { icon: 'fa-envelope', title: 'Email', value: s.contact.email || '', sub: 'We reply within 24 hours' },
+          { icon: 'fa-clock', title: 'Business Hours', value: 'Monday to Sunday 09:00 – 21:00', sub: 'Open every day' }
+        ] : []);
+      if (__cardsList.length) {
         var grid = document.getElementById('contact-info-grid');
         if (grid) {
           grid.innerHTML = '';
-          cc.cards.forEach(function(cd) {
+          __cardsList.forEach(function(cd) {
             var icon = cd.icon || 'fa-phone-alt';
             if (icon.indexOf('fa-') !== 0) icon = 'fa-' + icon;
             var BRAND_ICONS = ['fa-weixin','fa-whatsapp','fa-qq','fa-weibo','fa-wechat','fa-facebook','fa-twitter','fa-instagram','fa-youtube','fa-linkedin','fa-github','fa-telegram','fa-skype','fa-discord','fa-line','fa-tiktok','fa-weibo'];

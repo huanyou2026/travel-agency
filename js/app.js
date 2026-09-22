@@ -485,7 +485,7 @@ copyright: s.copyright || '© 2026 HuanYou Travel. All rights reserved.',
           </div>
           <div>
             <h4 class="footer-title">Destinations</h4>
-            <div class="footer-links">${(Array.isArray(s.footerDestLinks)&&s.footerDestLinks.length>0?s.footerDestLinks:[{label:'Yunnan',href:'/destinations'},{label:'Sichuan',href:'/destinations'},{label:'Tibet',href:'/destinations'},{label:'Guangxi',href:'/destinations'}]).map(r=>'<a href="'+esc(r.href||'#')+'">'+esc(r.label||'')+'</a>').join('')}
+            <div class="footer-links">${(Array.isArray(s.footerDestLinks)&&s.footerDestLinks.length>0?s.footerDestLinks:[{label:'Yunnan',href:'/destinations'},{label:'Sichuan',href:'/destinations'},{label:'Tibet',href:'/destinations'},{label:'Guangxi',href:'/destinations'}]).map(r=>'<a href="'+esc(r.href||'#')+'">'+esc(r.label||'')+'</a>').join('')}</div>
           </div>
           <div>
 <h4 class="footer-title">Contact Us</h4>
