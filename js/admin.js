@@ -1360,12 +1360,16 @@ const AdminHomepage = {
       '<input type="text" class="ti-img-url form-control" placeholder="图片URL" value="">' +
       '<button type="button" class="btn-icon" title="上传" onclick="var inp=this.previousElementSibling;AdminImageUpload.pickUrl(inp)"><i class="fas fa-upload"></i></button>' +
       '<input type="number" class="ti-img-w form-control" placeholder="宽度px" min="200" max="3840" value="" style="width:90px;">' +
+      '<input type="text" class="ti-img-name form-control" placeholder="姓名" value="" style="width:90px;">' +
+      '<input type="text" class="ti-img-title form-control" placeholder="职位" value="" style="width:130px;">' +
       '<button type="button" class="btn-icon" title="删除" onclick="this.closest(\'.ti-row\').remove();"><i class="fas fa-trash"></i></button>';
     rows.appendChild(row);
     var urlIn = row.querySelector('.ti-img-url');
     var pvImg = row.querySelector('.ti-img-pv');
     var wIn = row.querySelector('.ti-img-w');
     if (item.url) { urlIn.value = item.url; pvImg.src = item.url; pvImg.style.display = 'block'; if (item.width) wIn.value = item.width; }
+    var nameIn = row.querySelector('.ti-img-name'); if (nameIn) nameIn.value = item.name || '';
+    var titleIn = row.querySelector('.ti-img-title'); if (titleIn) titleIn.value = item.title || '';
     urlIn.oninput = function() { var url = urlIn.value.trim(); pvImg.src = url; pvImg.style.display = url ? 'block' : 'none'; };
   },
 
@@ -1407,7 +1411,14 @@ const AdminHomepage = {
           heroImage: document.getElementById('hp-about-hero-url').value.trim(),
           heroImageWidth: parseInt(document.getElementById('hp-about-hero-width').value) || 0,
           teamImages: Array.from(document.querySelectorAll('.ti-row')).map(function(row) {
-            return { url: row.querySelector('.ti-img-url').value.trim(), width: parseInt(row.querySelector('.ti-img-w').value) || 0 };
+            var nEl = row.querySelector('.ti-img-name');
+            var tEl = row.querySelector('.ti-img-title');
+            return {
+              url: row.querySelector('.ti-img-url').value.trim(),
+              width: parseInt(row.querySelector('.ti-img-w').value) || 0,
+              name: nEl ? nEl.value.trim() : '',
+              title: tEl ? tEl.value.trim() : ''
+            };
           }).filter(function(item) { return item.url; }),
           aboutText: g('hp-about')
         }

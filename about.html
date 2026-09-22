@@ -159,6 +159,16 @@
         </div>
       </div>
     </section>
+
+    <section class="core-team">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Core <span style="color:#FF8F00;">Team</span></h2>
+          <p class="section-subtitle">HuanYou Travel is built by these awesome travelers.</p>
+        </div>
+        <div id="core-team-grid" class="core-team-grid"></div>
+      </div>
+    </section>
   </main>
 
   <footer class="footer">
@@ -294,6 +304,19 @@
               p.textContent = txt;
               st.appendChild(p);
             });
+          }
+        }
+        if (ac.teamImages && ac.teamImages.length) {
+          var tg = document.getElementById('core-team-grid');
+          if (tg) {
+            tg.innerHTML = ac.teamImages.map(function(it) {
+              if (!it.url) return '';
+              return '<div class="core-team-card">'
+                + '<div class="core-team-card-img"><img src="' + escH(it.url) + '" alt="' + escH(it.name||'') + '" loading="lazy"></div>'
+                + '<div class="core-team-card-name">' + escH(it.name||'') + '</div>'
+                + '<div class="core-team-card-title">' + escH(it.title||'') + '</div>'
+                + '</div>';
+            }).join('');
           }
         }
       }).catch(function(){});
