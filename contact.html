@@ -32,7 +32,18 @@
       box-shadow: 0 4px 16px rgba(0,0,0,0.04);
       padding: 28px 24px;
     }
-    .contact-page-layout .contact-info-section .container,
+    
+    .contact-page-layout > .faq-section {
+      grid-column: 1 / -1;
+      max-width: 800px;
+      margin: 0 auto;
+      background: #fff;
+    }
+    .contact-page-layout > .faq-section .container {
+      max-width: 100%;
+      padding: 0;
+      margin: 0;
+    }.contact-page-layout .contact-info-section .container,
     .contact-page-layout .contact-form-section .container {
       max-width: 100%;
       padding: 0;
@@ -307,8 +318,9 @@
       return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
     function applyContact(s) {
-      if (!s || !s.contactContent) return;
-      var cc = s.contactContent;
+      if (!s) return;
+      var cc = s.contactContent || {};
+      var hasContactContent = !!s.contactContent;
       var sub = document.querySelector('.page-header .page-subtitle');
       if (sub && cc.subtitle) {
           sub.textContent = cc.subtitle;
@@ -390,7 +402,7 @@ if (tEl && /Time|Hours|Business/.test(tEl.textContent)) {
           faqListEl.appendChild(det);
         });
       } else if (faqListEl) {
-        faqListEl.innerHTML = '<div class="faq-empty">暂无 FAQ，请在后台配置。</div>';
+        faqListEl.innerHTML = '<div class="faq-empty">' + (hasContactContent ? '暂无 FAQ，请在后台配置。' : 'FAQ 加载中…') + '</div>';
       }
     }
     DataLoader.loadSettings().then(applyContact).catch(function(){});

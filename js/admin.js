@@ -1544,6 +1544,7 @@ const AdminContact = {
   },
 
   async save() {
+    try {
     const subtitle = document.getElementById('ct-subtitle').value.trim();
     const cards = Array.from(document.querySelectorAll('.ct-card-row')).map(function(row) {
       return {
@@ -1572,6 +1573,10 @@ const AdminContact = {
     }
     DataLoader.clearCache();
     Toast.success('联系我们页面已保存！');
+    } catch (e) {
+      console.error('AdminContact.save error:', e);
+      Toast.error && Toast.error('保存失败：' + (e && e.message || '未知错误'));
+    }
   }
 };
 
